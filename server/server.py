@@ -11,6 +11,7 @@ async def handler(websocket, path):
         async for message in websocket:
             for client in connected_clients:
                 if client != websocket:
+                    print(message)
                     await client.send(message)
     finally:
         # クライアントの登録を解除
