@@ -1,0 +1,52 @@
+<mxfile host="Electron" modified="2024-11-04T16:53:55.247Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.0.3 Chrome/114.0.5735.289 Electron/25.8.4 Safari/537.36" etag="tZJ7gD1MoWVvHTJfdhOj" version="22.0.3" type="device">
+  <diagram name="Page-1" id="Vk0b5H3L1SESiMLQ1a4l">
+    <mxGraphModel dx="1120" dy="1187" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3300" pageHeight="4681" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="GG8ZNHu40x4m-I4L73oo-1" value="" style="verticalLabelPosition=bottom;sketch=0;aspect=fixed;html=1;verticalAlign=top;strokeColor=none;align=center;outlineConnect=0;shape=mxgraph.citrix.tower_server;fontColor=none;noLabel=1;" vertex="1" parent="1">
+          <mxGeometry x="519.12" y="200" width="91.76" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="GG8ZNHu40x4m-I4L73oo-2" value="" style="image;points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image=img/lib/allied_telesis/computer_and_terminals/Personal_Computer_with_Server.svg;" vertex="1" parent="1">
+          <mxGeometry x="160" y="560" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="GG8ZNHu40x4m-I4L73oo-3" value="" style="image;points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image=img/lib/allied_telesis/computer_and_terminals/Personal_Computer_with_Server.svg;" vertex="1" parent="1">
+          <mxGeometry x="400" y="560" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="GG8ZNHu40x4m-I4L73oo-4" value="" style="image;points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image=img/lib/allied_telesis/computer_and_terminals/Personal_Computer_with_Server.svg;" vertex="1" parent="1">
+          <mxGeometry x="640" y="560" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="GG8ZNHu40x4m-I4L73oo-5" value="" style="image;points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image=img/lib/allied_telesis/computer_and_terminals/Personal_Computer_with_Server.svg;" vertex="1" parent="1">
+          <mxGeometry x="880" y="560" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="GG8ZNHu40x4m-I4L73oo-6" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="220" y="550" as="sourcePoint" />
+            <mxPoint x="490" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="GG8ZNHu40x4m-I4L73oo-7" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="440" y="550" as="sourcePoint" />
+            <mxPoint x="540" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="GG8ZNHu40x4m-I4L73oo-8" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="680" y="550" as="sourcePoint" />
+            <mxPoint x="580" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="GG8ZNHu40x4m-I4L73oo-9" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="920" y="540" as="sourcePoint" />
+            <mxPoint x="630" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="GG8ZNHu40x4m-I4L73oo-10" value="&lt;h1 style=&quot;font-size: 31px;&quot;&gt;WebSocket通信&lt;/h1&gt;" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=31;" vertex="1" parent="1">
+          <mxGeometry x="470" y="430" width="190" height="70" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,2 @@
+aioconsole==0.8.0
+websockets==13.1
