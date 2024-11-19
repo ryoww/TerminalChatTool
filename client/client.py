@@ -1,73 +1,94 @@
-import asyncio
-import websockets
-import aioconsole
+import socketio
 
-async def chat():
-    uri = "ws://localhost:8765"
-    async with websockets.connect(uri) as websocket:
-        username = await aioconsole.ainput("ユーザー名を入力してください: ")
-        await websocket.send(username)
+sio = socketio.Client()
 
-        private_chat = False
-        requester = None  # チャットリクエストを送ってきたユーザー名
-        partner = None    # 個別チャット中の相手のユーザー名
+# 部屋選択中かどうかを示すフラグ
+is_handle_rooms = False
 
-        async def receive_messages():
-            nonlocal private_chat, requester, partner
-            while True:
-                try:
-                    message = await websocket.recv()
-                    if message.startswith('user_list:'):
-                        user_list = message.split(':', 1)[1]
-                        print(f"接続中のユーザー: {user_list}")
-                    elif message.startswith('request_from:'):
-                        requester = message.split(':', 1)[1]
-                        print(f"{requester} からチャットリクエストがあります。'yes' または 'no' で応答してください。")
-                    elif message.startswith('response_from:'):
-                        parts = message.split(':', 2)
-                        responder = parts[1]
-                        response = parts[2]
-                        if response == 'yes':
-                            print(f"{responder} がチャットリクエストを承認しました。")
-                            private_chat = True
-                            partner = responder
-                        else:
-                            print(f"{responder} がチャットリクエストを拒否しました。")
-                    elif message.startswith('private_chat_with:'):
-                        partner = message.split(':', 1)[1]
-                        print(f"{partner} と個別チャットを開始しました。")
-                        private_chat = True
+is_username_set = False
+
+@sio.on('request_username')
+def request_username():
+    global is_username_set
+    # while not is_username_set:
+    username = input('Enter your username\n')
+    sio.emit('register_username', {'username': username})
+
+@sio.on('view_rooms')
+def view_rooms(data):
+    global is_handle_rooms
+    list_rooms = data['rooms']
+    rooms_len = len(list_rooms)
+
+    # オプションを追加
+    list_rooms.append(['Create and join room', 0, []])
+    list_rooms.append(['Back', 0, []])
+
+    for index, room_info in enumerate(list_rooms, 1):
+        room_name = room_info[0]
+        print(f'{index}: {room_name}')
+
+    while True:
+        try:
+            room_num = int(input(f'Please select a room or command (1 ~ {rooms_len + 2}): ')) - 1
+
+            if 0 <= room_num < rooms_len:
+                # 部屋に参加
+                room_name = list_rooms[room_num][0]
+                sio.emit('join_room', {'room': room_name})
+                break
+            elif room_num == rooms_len:
+                # 新しい部屋を作成
+                while True:
+                    new_room_name = input('Please enter new room name: ')
+                    if new_room_name and new_room_name not in [room[0] for room in list_rooms]:
+                        sio.emit('create_room', {'room_name': new_room_name})
+                        break
                     else:
-                        print(message)
-                except websockets.ConnectionClosed:
-                    print("サーバーから切断されました。")
-                    break
+                        print('Invalid room name or room already exists.')
+                break
+            elif room_num == rooms_len + 1:
+                # 戻る
+                break
+            else:
+                print('Invalid selection.')
+        except ValueError:
+            print('Error: Please enter a valid integer.')
+    # 部屋選択が完了したのでフラグを下げる
+    is_handle_rooms = False
 
-        async def send_messages():
-            nonlocal private_chat, requester, partner
-            while True:
-                message = await aioconsole.ainput()
-                if message == 'exit':
-                    await websocket.close()
-                    break
-                elif message == 'list':
-                    # ユーザーリストは自動的に送信されるため何もしない
-                    pass
-                elif message.startswith('request '):
-                    target = message.split(' ', 1)[1]
-                    await websocket.send(f"request:{target}")
-                elif message == 'yes' or message == 'no':
-                    if requester:
-                        await websocket.send(f"response:{requester}:{message}")
-                        requester = None
-                    else:
-                        print("応答するチャットリクエストがありません。")
-                else:
-                    if private_chat:
-                        await websocket.send(message)
-                    else:
-                        print("個別チャット中ではありません。'request <ユーザー名>' でチャットをリクエストしてください。")
+@sio.on('response')
+def on_response(data):
+    global is_username_set
+    message = data['message']
+    print(message)
+    
+    if 'Welcom' in message:
+        is_username_set = True
 
-        await asyncio.gather(receive_messages(), send_messages())
+@sio.event
+def disconnect():
+    print('Disconnected from the server : ')
 
-asyncio.run(chat())
+sio.connect('http://0.0.0.0:5000')
+
+try:
+    while True:
+        if not is_handle_rooms and is_username_set:
+            message = input("Enter a message (type 'exit' to quit)\n")
+            if message.lower() == 'exit':
+                sio.emit('leave_room')
+                sio.disconnect()
+                break
+            elif message == '/rooms':
+                is_handle_rooms = True
+                sio.emit('rooms')
+            elif message == '/leave_room':
+                sio.emit('leave_room')
+            else:
+                sio.emit('message', {'text': message})
+
+except KeyboardInterrupt:
+    print('\nClient terminated by user.\n')
+    sio.emit('leave_room')
+    sio.disconnect()

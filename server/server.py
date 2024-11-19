@@ -1,78 +1,144 @@
-import asyncio
-import websockets
+from flask import Flask, request
+from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_cors import CORS
+app = Flask(__name__)
 
-connected_clients = {}  # ユーザー名とWebSocketの対応を保持
+CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
-async def handler(websocket, path):
-    # クライアントからユーザー名を受信
-    username = await websocket.recv()
-    connected_clients[username] = websocket
-    print(f"{username} が接続しました。")
+userinfos = {}
+rooms = ['Open']
 
+
+def cleanup_room(room):
+    remaining_users = [user for user in userinfos.values() if user['room'] == room]
+    if not remaining_users and room != 'Open':
+        rooms.remove(room)
+        print(f'Room "{room}" has been deleted because it is empty.')
+
+
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
+    emit('request_username')
+
+
+@socketio.on('register_username')
+def handle_register_username(data):
+    sid = request.sid
+    username = data.get('username')
+    registered_usernames = {user['name'] for user in userinfos.values()}
+
+    
+    if not username:
+        emit('response', {'message': 'Username cannot be empty.'})
+        emit('request_username')
+    
+    # elif username in registered_usernames:
+    #     emit('response', {'message': f"The username '{username}' is already taken. Please choose a different one."})
+    #     emit('request_username')
+        
+    else:
+        join_room('Open')
+        userinfos[sid] = {'name': username, 'room': 'Open'}
+        print(userinfos)
+        emit('response', {'message': f'Welcome, {username}!'})
+        emit('response', {'message': f'{username} has joined the chat.'}, room='Open', include_self=False)
+
+
+@socketio.on('create_room')
+def handle_create_room(data):
+    sid = request.sid
+    room = data.get('room_name')
+    if room not in rooms:
+        rooms.append(room)
+        previous_room = userinfos[sid]['room']
+        leave_room(previous_room)
+        join_room(room)
+        userinfos[sid]['room'] = room
+        emit('response', {'message': f'Room "{room}" created and joined.'})
+    else:
+        emit('response', {'message': f'Room "{room}" already exists.'})
+
+
+@socketio.on('join_room')
+def handle_join_room(data):
+    sid = request.sid
+    room = data.get('room')
+    previous_room = userinfos[sid]['room']
+
+    if room in rooms:
+        if room != previous_room:
+            leave_room(previous_room)
+            join_room(room)
+            userinfos[sid]['room'] = room
+            username = userinfos[sid]['name']
+            emit('response', {'message': f'You have joined room "{room}"'})
+            emit('response', {'message': f'{username} has joined the room.'}, room=room, include_self=False)
+        
+        else:
+            emit('response', {'message' : f'You are in {previous_room} chat.'})
+    else:
+        emit('response', {'message': f'Room "{room}" does not exist.'})
+
+    print('join_room')
+
+
+@socketio.on('leave_room')
+def handle_leave_room():
+    sid = request.sid
     try:
-        # 接続中のユーザーリストを全クライアントに送信
-        await send_user_list()
+        room = userinfos[sid]['room']
+        if room != 'Open':
+            leave_room(room)
+            join_room('Open')
+            username = userinfos[sid]['name']
+            userinfos[sid]['room'] = 'Open'
+            emit('response', {'message': f'You have left room "{room}".'})
+            emit('response', {'message': f'{username} has left the room.'}, room=room, include_self=False)
+            cleanup_room(room)
+        else:
+            emit('response', {'message': 'You cannot leave the "Open" chat.'})
+    except KeyError:
+        emit('response', {'message': 'User information not found.'})
 
-        # クライアントからのメッセージを処理
-        async for message in websocket:
-            if message.startswith('request:'):
-                # チャットリクエストの処理
-                target_username = message.split(':', 1)[1]
-                if target_username in connected_clients:
-                    target_ws = connected_clients[target_username]
-                    # 目標ユーザーにリクエストを送信
-                    await target_ws.send(f"request_from:{username}")
-                else:
-                    await websocket.send(f"ユーザー {target_username} は見つかりません。")
-            elif message.startswith('response:'):
-                # リクエストへの応答の処理
-                parts = message.split(':', 2)
-                requester = parts[1]
-                response = parts[2]
-                if requester in connected_clients:
-                    requester_ws = connected_clients[requester]
-                    await requester_ws.send(f"response_from:{username}:{response}")
-                    if response == 'yes':
-                        # 個別チャットの開始
-                        await start_private_chat(requester_ws, websocket, requester, username)
-                        break  # ハンドラを終了
-                else:
-                    await websocket.send(f"ユーザー {requester} は見つかりません。")
-            else:
-                await websocket.send("無効なコマンドです。")
 
-    finally:
-        # クライアントの切断時にリストから削除
-        del connected_clients[username]
-        print(f"{username} が切断しました。")
-        await send_user_list()
+@socketio.on('rooms')
+def handle_rooms():
+    rooms_counts = []
 
-async def send_user_list():
-    # 全クライアントにユーザーリストを送信
-    user_list = ','.join(connected_clients.keys())
-    for ws in connected_clients.values():
-        await ws.send(f"user_list:{user_list}")
+    for room in rooms:
+        names = [user['name'] for user in userinfos.values() if user['room'] == room]
+        count = len(names)
+        room_info = [room, count, names]
+        rooms_counts.append(room_info)
 
-async def start_private_chat(ws1, ws2, user1, user2):
-    # 個別チャットの開始を両ユーザーに通知
-    await ws1.send(f"private_chat_with:{user2}")
-    await ws2.send(f"private_chat_with:{user1}")
+    emit('view_rooms', {'rooms': rooms_counts})
 
-    async def forward_message(sender_ws, receiver_ws, sender_name):
-        try:
-            async for message in sender_ws:
-                await receiver_ws.send(f"{sender_name}: {message}")
-        except websockets.ConnectionClosed:
-            await receiver_ws.send(f"{sender_name} が切断しました。")
 
-    # 双方向のメッセージ転送を開始
-    await asyncio.gather(
-        forward_message(ws1, ws2, user1),
-        forward_message(ws2, ws1, user2)
-    )
+@socketio.on('message')
+def handle_message(data):
+    sid = request.sid
+    try:
+        username = userinfos[sid]['name']
+        text = data.get('text', '')
+        room = userinfos[sid]['room']
+        print('Received message', data)
+        emit('response', {'message': f'{username}: {text}'}, room=room, include_self=False)
+    except KeyError:
+        emit('response', {'message': 'User information not found.'})
 
-async def main():
-    async with websockets.serve(handler, "localhost", 8765):
-        await asyncio.Future()  # 無限に実行
 
-asyncio.run(main())
+@socketio.on('disconnect')
+def handle_exit():
+    sid = request.sid
+    if sid in userinfos:
+        username = userinfos[sid]['name']
+        room = userinfos[sid]['room']
+        del userinfos[sid]
+        emit('response', {'message': f'{username} has disconnected.'}, room=room)
+        cleanup_room(room)
+
+
+if __name__ == '__main__':
+    socketio.run(app=app, host='0.0.0.0', port=5000, debug=True)
