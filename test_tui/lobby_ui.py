@@ -3,6 +3,7 @@ from rich.prompt import Prompt
 from rich.panel import Panel
 from rich.table import Table
 from rich.layout import Layout
+from rich.align import Align
 
 # Consoleのインスタンスを作成
 console = Console()
@@ -14,8 +15,11 @@ rooms = ["General", "Sports", "Technology"]
 def display_lobby():
     layout = Layout()
 
-    # タイトルパネル
-    title_panel = Panel("[bold magenta]Chat Lobby[/bold magenta]", style="purple")
+    # タイトルパネルを中央揃えで表示
+    title_panel = Panel(
+        Align.center("[bold magenta]Chat Lobby[/bold magenta]"),
+        style="purple",
+    )
     layout.split_column(
         Layout(title_panel, name="title", size=3),
         Layout(name="main"),
