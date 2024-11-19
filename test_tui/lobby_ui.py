@@ -4,6 +4,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.layout import Layout
 from rich.align import Align
+from rich.rule import Rule
 
 # Consoleのインスタンスを作成
 console = Console()
@@ -15,61 +16,62 @@ rooms = ["General", "Sports", "Technology"]
 def display_lobby():
     layout = Layout()
 
-    # タイトルパネルを中央揃えで表示
+    # タイトルを中央揃えで表示（装飾追加）
     title_panel = Panel(
-        Align.center("[bold magenta]Chat Lobby[/bold magenta]"),
-        style="purple",
+        Align.center("[bold magenta]✨ Chat Lobby ✨[/bold magenta]"),
+        style="bright_black",
+        border_style="magenta",
     )
     layout.split_column(
-        Layout(title_panel, name="title", size=3),
+        Layout(title_panel, name="title", size=5),
         Layout(name="main"),
     )
 
     # チャットルーム選択のテーブル
-    table = Table(title="Available Chat Rooms", style="cyan")
-    table.add_column("番号", justify="center", style="bold")
-    table.add_column("部屋の名前", style="green")
-
-    # 部屋のリストをテーブルに追加
+    table = Table(style="cyan", border_style="bright_blue")
+    table.add_column("番号", justify="center", style="bold yellow")
+    table.add_column("部屋の名前", style="bold green")
     for index, room in enumerate(rooms, start=1):
-        table.add_row(str(index), room)
+        table.add_row(f" {index}", room)
+    table.add_row(f"➕ {len(rooms) + 1}", "[italic cyan]部屋の追加[/italic cyan]")
 
-    # 最後に部屋の追加オプションを追加
-    table.add_row(str(len(rooms) + 1), "部屋の追加")
-
-    # テーブルを固定サイズのパネルに追加
+    # テーブルをパネルに追加
     panel = Panel(
-        table, 
-        title="Choose a room", 
-        border_style="blue", 
-        height=15   # 高さを固定
+        table,
+        title="[bold yellow]Choose a room[/bold yellow]",
+        border_style="bright_blue",
+        padding=(0, 2),
     )
 
     # メインレイアウトにパネルを設定
     layout["main"].update(panel)
 
-    # ロビー画面を表示
+    # ロビー画面全体を描画
     console.print(layout)
+    console.print(Rule("[bold cyan]番号を入力してください[/bold cyan]"))
 
 # 部屋の追加または選択の処理
 def main():
     while True:
-        # ロビー画面の表示
         display_lobby()
 
         # ユーザーの入力を取得
-        choice = Prompt.ask("番号を入力してください", choices=[str(i) for i in range(1, len(rooms) + 2)])
+        choice = Prompt.ask(
+            "[bold cyan]番号を選択してください[/bold cyan]",
+            choices=[str(i) for i in range(1, len(rooms) + 2)],
+            default=str(len(rooms) + 1),  # デフォルトを部屋の追加に設定
+        )
 
         # 選択した部屋に基づいて処理を行う
         if int(choice) == len(rooms) + 1:  # 部屋の追加が選択された場合
-            room_name = Prompt.ask("部屋の名前を入力してください")
-            # 新しい部屋を追加し、部屋リストを更新
+            room_name = Prompt.ask("[bold green]新しい部屋の名前を入力してください[/bold green]")
             rooms.append(room_name)
-            console.print(f"[bold green]{room_name} が追加されました。[/bold green]\n")
+            console.print(f"\n[bold green]🎉 {room_name} が追加されました！[/bold green]\n")
         else:
             selected_room = rooms[int(choice) - 1]
-            console.print(f"\n[bold green]{selected_room} に入りました。[/bold green]\n")
+            console.print(f"\n[bold yellow]🛋️ {selected_room} に入りました！[/bold yellow]\n")
             # 部屋に入った場合の処理をここに追加可能
 
 # 実行
-main()
+if __name__ == "__main__":
+    main()
