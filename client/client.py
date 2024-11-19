@@ -1,18 +1,22 @@
 import socketio
-import threading
 
 sio = socketio.Client()
 
-# 部屋選択中かどうかを示すイベントフラグを作成
-rooms_event = threading.Event()
+# 部屋選択中かどうかを示すフラグ
+is_handle_rooms = False
+
+is_username_set = False
 
 @sio.on('request_username')
 def request_username():
+    global is_username_set
+    # while not is_username_set:
     username = input('Enter your username\n')
     sio.emit('register_username', {'username': username})
 
 @sio.on('view_rooms')
 def view_rooms(data):
+    global is_handle_rooms
     list_rooms = data['rooms']
     rooms_len = len(list_rooms)
 
@@ -50,36 +54,39 @@ def view_rooms(data):
                 print('Invalid selection.')
         except ValueError:
             print('Error: Please enter a valid integer.')
-    # 部屋選択が完了したのでイベントをセット
-    rooms_event.set()
+    # 部屋選択が完了したのでフラグを下げる
+    is_handle_rooms = False
 
 @sio.on('response')
 def on_response(data):
-    print(data['message'])
+    global is_username_set
+    message = data['message']
+    print(message)
+    
+    if 'Welcom' in message:
+        is_username_set = True
 
 @sio.event
 def disconnect():
-    print('Disconnected from the server\n')
+    print('Disconnected from the server : ')
 
 sio.connect('http://0.0.0.0:5000')
 
 try:
     while True:
-        message = input("Enter a message (type 'exit' to quit)\n")
-        if message.lower() == 'exit':
-            sio.emit('leave_room')
-            sio.disconnect()
-            break
-        elif message == '/rooms':
-            # 部屋選択イベントをクリアして待機状態にする
-            rooms_event.clear()
-            sio.emit('rooms')
-            # 部屋選択が完了するまで待機
-            rooms_event.wait()
-        elif message == '/leave_room':
-            sio.emit('leave_room')
-        else:
-            sio.emit('message', {'text': message})
+        if not is_handle_rooms and is_username_set:
+            message = input("Enter a message (type 'exit' to quit)\n")
+            if message.lower() == 'exit':
+                sio.emit('leave_room')
+                sio.disconnect()
+                break
+            elif message == '/rooms':
+                is_handle_rooms = True
+                sio.emit('rooms')
+            elif message == '/leave_room':
+                sio.emit('leave_room')
+            else:
+                sio.emit('message', {'text': message})
 
 except KeyboardInterrupt:
     print('\nClient terminated by user.\n')

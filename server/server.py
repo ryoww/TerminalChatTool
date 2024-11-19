@@ -1,11 +1,10 @@
 from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
-
 app = Flask(__name__)
 
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 userinfos = {}
 rooms = ['Open']
@@ -28,14 +27,23 @@ def handle_connect():
 def handle_register_username(data):
     sid = request.sid
     username = data.get('username')
+    registered_usernames = {user['name'] for user in userinfos.values()}
+
+    
     if not username:
         emit('response', {'message': 'Username cannot be empty.'})
-        return
-    join_room('Open')
-    userinfos[sid] = {'name': username, 'room': 'Open'}
-    print(userinfos)
-    emit('response', {'message': f'Welcome, {username}!'})
-    emit('response', {'message': f'{username} has joined the chat.'}, room='Open', include_self=False)
+        emit('request_username')
+    
+    # elif username in registered_usernames:
+    #     emit('response', {'message': f"The username '{username}' is already taken. Please choose a different one."})
+    #     emit('request_username')
+        
+    else:
+        join_room('Open')
+        userinfos[sid] = {'name': username, 'room': 'Open'}
+        print(userinfos)
+        emit('response', {'message': f'Welcome, {username}!'})
+        emit('response', {'message': f'{username} has joined the chat.'}, room='Open', include_self=False)
 
 
 @socketio.on('create_room')
@@ -57,15 +65,19 @@ def handle_create_room(data):
 def handle_join_room(data):
     sid = request.sid
     room = data.get('room')
+    previous_room = userinfos[sid]['room']
 
     if room in rooms:
-        previous_room = userinfos[sid]['room']
-        leave_room(previous_room)
-        join_room(room)
-        userinfos[sid]['room'] = room
-        username = userinfos[sid]['name']
-        emit('response', {'message': f'You have joined room "{room}"'})
-        emit('response', {'message': f'{username} has joined the room.'}, room=room, include_self=False)
+        if room != previous_room:
+            leave_room(previous_room)
+            join_room(room)
+            userinfos[sid]['room'] = room
+            username = userinfos[sid]['name']
+            emit('response', {'message': f'You have joined room "{room}"'})
+            emit('response', {'message': f'{username} has joined the room.'}, room=room, include_self=False)
+        
+        else:
+            emit('response', {'message' : f'You are in {previous_room} chat.'})
     else:
         emit('response', {'message': f'Room "{room}" does not exist.'})
 
@@ -81,6 +93,7 @@ def handle_leave_room():
             leave_room(room)
             join_room('Open')
             username = userinfos[sid]['name']
+            userinfos[sid]['room'] = 'Open'
             emit('response', {'message': f'You have left room "{room}".'})
             emit('response', {'message': f'{username} has left the room.'}, room=room, include_self=False)
             cleanup_room(room)
