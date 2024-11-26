@@ -32,7 +32,7 @@ def display_lobby():
     table.add_column("番号", justify="center", style="bold yellow")
     table.add_column("部屋の名前", style="bold green")
     for index, room in enumerate(rooms, start=1):
-        table.add_row(f"🏷 {index}", room)
+        table.add_row(f" {index}", room)
     table.add_row(f"➕ {len(rooms) + 1}", "[italic cyan]部屋の追加[/italic cyan]")
 
     # テーブルをパネルに追加
