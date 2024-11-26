@@ -1,43 +1,77 @@
 from rich.console import Console
-from rich.text import Text
-from rich.panel import Panel
 from rich.prompt import Prompt
+from rich.panel import Panel
+from rich.table import Table
+from rich.layout import Layout
 from rich.align import Align
+from rich.rule import Rule
 
+# Consoleのインスタンスを作成
 console = Console()
 
-# チャットメッセージのデータ
-messages = [
-    {"sender": "A", "message": "Hello, how are you?"},
-    {"sender": "B", "message": "I'm good! How about you?"},
-    {"sender": "A", "message": "I'm doing well, thanks!"},
-    {"sender": "B", "message": "What are you up to?"},
-]
+# 部屋の選択肢（初期部屋）
+rooms = ["General", "Sports", "Technology"]
 
-def display_chat():
-    """チャット全体を表示する関数"""
-    content = Text()
-    for msg in messages:
-        sender = Text(f"{msg['sender']}: ", style="magenta" if msg['sender'] == "A" else "cyan")
-        message = Text(msg["message"], style="white")
-        content.append(sender)
-        content.append(message)
-        content.append("\n")
+# ロビー画面の表示関数
+def display_lobby():
+    layout = Layout()
 
-    # 全体を枠で囲んで表示
-    console.clear()
-    console.print(Panel(Align.left(content), title="Chat Room", border_style="blue", padding=(1, 2)))
+    # タイトルを中央揃えで表示（装飾追加）
+    title_panel = Panel(
+        Align.center("[bold magenta]✨ Chat Lobby ✨[/bold magenta]"),
+        style="bright_black",
+        border_style="magenta",
+    )
+    layout.split_column(
+        Layout(title_panel, name="title", size=5),
+        Layout(name="main"),
+    )
 
-def send_message():
-    """メッセージを入力して送信する関数"""
+    # チャットルーム選択のテーブル
+    table = Table(style="cyan", border_style="bright_blue")
+    table.add_column("番号", justify="center", style="bold yellow")
+    table.add_column("部屋の名前", style="bold green")
+    for index, room in enumerate(rooms, start=1):
+        table.add_row(f"🏷 {index}", room)
+    table.add_row(f"➕ {len(rooms) + 1}", "[italic cyan]部屋の追加[/italic cyan]")
+
+    # テーブルをパネルに追加
+    panel = Panel(
+        table,
+        title="[bold yellow]Choose a room[/bold yellow]",
+        border_style="bright_blue",
+        padding=(0, 2),
+    )
+
+    # メインレイアウトにパネルを設定
+    layout["main"].update(panel)
+
+    # ロビー画面全体を描画
+    console.print(layout)
+    console.print(Rule("[bold cyan]番号を入力してください[/bold cyan]"))
+
+# 部屋の追加または選択の処理
+def main():
     while True:
-        display_chat()  # チャット全体を表示
-        user_input = Prompt.ask("あなたのメッセージを入力 ('exit'で終了)")
-        if user_input.lower() == 'exit':
-            console.print("\nチャットを終了します。", style="bold red")
-            break
-        # メッセージを追加して表示を更新
-        messages.append({"sender": "You", "message": user_input})
+        display_lobby()
 
-# メイン実行
-send_message()
+        # ユーザーの入力を取得
+        choice = Prompt.ask(
+            "[bold cyan]番号を選択してください[/bold cyan]",
+            choices=[str(i) for i in range(1, len(rooms) + 2)],
+            default=str(len(rooms) + 1),  # デフォルトを部屋の追加に設定
+        )
+
+        # 選択した部屋に基づいて処理を行う
+        if int(choice) == len(rooms) + 1:  # 部屋の追加が選択された場合
+            room_name = Prompt.ask("[bold green]新しい部屋の名前を入力してください[/bold green]")
+            rooms.append(room_name)
+            console.print(f"\n[bold green]🎉 {room_name} が追加されました！[/bold green]\n")
+        else:
+            selected_room = rooms[int(choice) - 1]
+            console.print(f"\n[bold yellow]🛋️ {selected_room} に入りました！[/bold yellow]\n")
+            # 部屋に入った場合の処理をここに追加可能
+
+# 実行
+if __name__ == "__main__":
+    main()
