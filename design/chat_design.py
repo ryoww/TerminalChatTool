@@ -15,7 +15,7 @@ def instagram_banner():
     banner = Panel(
         Align.center(gradient_text),
         border_style="bold magenta",
-        title="InstaChat",
+        title="Chat Room",
         title_align="left",
     )
     console.print(banner)
@@ -48,8 +48,7 @@ def chat():
             console.print("[bold red]Goodbye! See you soon![/bold red]")
             break
         display_message(user_name, message, is_sender=True)
-        # ダミーレスポンス（相手のメッセージ）
-        display_message("Friend", "That's awesome! Tell me more!")
+        
 
 if __name__ == "__main__":
     chat()
