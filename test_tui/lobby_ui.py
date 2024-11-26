@@ -50,7 +50,18 @@ def display_lobby():
     console.print(layout)
     console.print(Rule("[bold cyan]番号を入力してください[/bold cyan]"))
 
-# 部屋の追加または選択の処理
+# 部屋に入る処理
+def enter_room(room_name):
+    console.clear()  # コンソールをクリア
+    console.print(
+        Panel(
+            f"[bold yellow]🛋️ {room_name} に入りました！[/bold yellow]",
+            border_style="green",
+            padding=(1, 2),
+        )
+    )
+
+# メインの処理
 def main():
     while True:
         display_lobby()
@@ -69,8 +80,8 @@ def main():
             console.print(f"\n[bold green]🎉 {room_name} が追加されました！[/bold green]\n")
         else:
             selected_room = rooms[int(choice) - 1]
-            console.print(f"\n[bold yellow]🛋️ {selected_room} に入りました！[/bold yellow]\n")
-            # 部屋に入った場合の処理をここに追加可能
+            enter_room(selected_room)  # 選択した部屋に入る処理を呼び出し
+            break  # ループを終了
 
 # 実行
 if __name__ == "__main__":
