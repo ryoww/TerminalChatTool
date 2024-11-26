@@ -8,7 +8,7 @@ console = Console()
 
 # Instagram風のカラフルなバナー表示
 def instagram_banner():
-    gradient_text = Text("Welcome to InstaChat!")
+    gradient_text = Text("Welcome to ChatRoom!")
     colors = ["#FF5733", "#C70039", "#900C3F", "#581845", "#DAF7A6", "#FFC300"]
     for i, char in enumerate(gradient_text.plain):
         gradient_text.stylize(f"bold {colors[i % len(colors)]}", i, i + 1)
