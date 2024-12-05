@@ -38,16 +38,16 @@ def handle_connect():
 def handle_register_username(data):
     sid = request.sid
     username = data.get('username')
-    registered_usernames = {user['name'] for user in userinfos.values()}
+    registered_usernames = [user['name'] for user in userinfos.values()]
 
     
     if not username:
         emit('response', {'message': 'Username cannot be empty.'})
         emit('request_username')
     
-    # elif username in registered_usernames:
-    #     emit('response', {'message': f"The username '{username}' is already taken. Please choose a different one."})
-    #     emit('request_username')
+    elif username in registered_usernames:
+        emit('response', {'message': f"The username '{username}' is already taken. Please choose a different one."})
+        emit('request_username')
         
     else:
         join_room('Open')
