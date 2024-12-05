@@ -1,5 +1,11 @@
 import socketio
 
+from rich.console import Console
+
+console = Console()
+
+
+
 sio = socketio.Client()
 
 # 部屋選択中かどうかを示すフラグ

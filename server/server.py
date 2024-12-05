@@ -1,6 +1,9 @@
 from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
+
+import random
+
 app = Flask(__name__)
 
 CORS(app)
@@ -15,6 +18,14 @@ def cleanup_room(room):
     if not remaining_users and room != 'Open':
         rooms.remove(room)
         print(f'Room "{room}" has been deleted because it is empty.')
+
+
+def generate_random_color():
+    r = random.randint(0, 255)
+    g = random.randint(0, 255)
+    b = random.randint(0, 255)
+    
+    return f'#{r:02X}{g:02X}{b:02X}'
 
 
 @socketio.on('connect')
@@ -40,7 +51,7 @@ def handle_register_username(data):
         
     else:
         join_room('Open')
-        userinfos[sid] = {'name': username, 'room': 'Open'}
+        userinfos[sid] = {'name': username, 'room': 'Open', 'color' : generate_random_color()}
         print(userinfos)
         emit('response', {'message': f'Welcome, {username}!'})
         emit('response', {'message': f'{username} has joined the chat.'}, room='Open', include_self=False)
