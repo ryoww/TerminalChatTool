@@ -6,6 +6,8 @@ from rich.align import Align
 from rich.panel import Panel
 from rich.table import Table
 
+from key import URL
+
 console = Console()
 
 
@@ -149,7 +151,7 @@ def disconnect():
     console.print('[bold magenta]Disconnected from the server[/bold magenta]')
 
 
-sio.connect('http://0.0.0.0:5000')
+sio.connect(URL)
 
 
 try:
