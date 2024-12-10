@@ -25,6 +25,10 @@ def generate_random_color():
     b = random.randint(0, 255)
     return f'#{r:02X}{g:02X}{b:02X}'
 
+@app.route('/')
+def index():
+    return {'status' : 'online'}
+
 
 @socketio.on('connect')
 def handle_connect():
